@@ -338,7 +338,7 @@ public abstract class AppHostBase : ServiceStackHost, IAppHostNetCore, IConfigur
                             continue;
 
                         routeRule = $"[{verb}] {route.Path}";
-                        existingRoutes[route.Path] = route;
+                        existingRoutes[routeRule] = route;
                         var pathBuilder = routeBuilder.MapMethods(route.Path, verb, (HttpResponse response, HttpContext httpContext) =>
                             HandleRequestAsync(requestType, httpContext));
                         
@@ -353,17 +353,17 @@ public abstract class AppHostBase : ServiceStackHost, IAppHostNetCore, IConfigur
                         if (!route.Path.Contains('.') && !route.Path.Contains('*'))
                         {
                             var routePath = route.Path + ".{format}";
-                            if (existingRoutes.TryGetValue(routePath, out var prevRoute))
+                            routeRule = $"[{verb}] {routePath}";
+                            if (existingRoutes.TryGetValue(routeRule, out var prevRoute))
                             {
                                 LogManager.GetLogger(GetType()).WarnFormat("Ignoring registering duplicate route: {0} for {1} and {2}", 
-                                    routePath,
+                                    routeRule,
                                     route.RequestType.FullName,
                                     prevRoute.RequestType.FullName);
                             }
                             else
                             {
-                                routeRule = $"[{verb}] {routePath}";
-                                existingRoutes[routePath] = route;
+                                existingRoutes[routeRule] = route;
                                 var pathBuilderFmt = routeBuilder.MapMethods(routePath, verb, 
                                     (string format, HttpResponse response, HttpContext httpContext) =>
                                         HandleRequestAsync(requestType, httpContext));
